@@ -53,9 +53,9 @@ const DDoSDetection = () => {
 
       if (isAttack) {
         setStatus("Under Attack");
-        if (t === 16) setAlerts((prev) => [{ time: now, type: "DDoS", severity: "critical", message: "SYN flood attack detected — traffic spike 5x above baseline" }, ...prev].slice(0, 10));
-        if (t === 20) setAlerts((prev) => [{ time: now, type: "DDoS", severity: "critical", message: "HTTP flood pattern identified from 150+ unique IPs" }, ...prev].slice(0, 10));
-        if (t === 25) setAlerts((prev) => [{ time: now, type: "DDoS", severity: "warning", message: "Attack intensity decreasing — mitigation in effect" }, ...prev].slice(0, 10));
+        if (t === 16) setAlerts((prev) => [{ time: now, type: "DDoS", severity: "critical" as const, message: "SYN flood attack detected — traffic spike 5x above baseline" }, ...prev].slice(0, 10));
+        if (t === 20) setAlerts((prev) => [{ time: now, type: "DDoS", severity: "critical" as const, message: "HTTP flood pattern identified from 150+ unique IPs" }, ...prev].slice(0, 10));
+        if (t === 25) setAlerts((prev) => [{ time: now, type: "DDoS", severity: "warning" as const, message: "Attack intensity decreasing — mitigation in effect" }, ...prev].slice(0, 10));
       } else if (isWarning) {
         setStatus("Warning");
         if (t === 13) setAlerts((prev) => [{ time: now, type: "Anomaly", severity: "warning", message: "Unusual traffic spike detected — monitoring closely" }, ...prev].slice(0, 10));
