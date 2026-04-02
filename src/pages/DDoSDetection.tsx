@@ -58,10 +58,10 @@ const DDoSDetection = () => {
         if (t === 25) setAlerts((prev) => [{ time: now, type: "DDoS", severity: "warning" as const, message: "Attack intensity decreasing — mitigation in effect" }, ...prev].slice(0, 10));
       } else if (isWarning) {
         setStatus("Warning");
-        if (t === 13) setAlerts((prev) => [{ time: now, type: "Anomaly", severity: "warning", message: "Unusual traffic spike detected — monitoring closely" }, ...prev].slice(0, 10));
+        if (t === 13) setAlerts((prev) => [{ time: now, type: "Anomaly", severity: "warning" as const, message: "Unusual traffic spike detected — monitoring closely" }, ...prev].slice(0, 10));
       } else if (t >= 30) {
         setStatus("Normal");
-        if (t === 30) setAlerts((prev) => [{ time: now, type: "Recovery", severity: "info", message: "Traffic returned to normal levels — attack mitigated" }, ...prev].slice(0, 10));
+        if (t === 30) setAlerts((prev) => [{ time: now, type: "Recovery", severity: "info" as const, message: "Traffic returned to normal levels — attack mitigated" }, ...prev].slice(0, 10));
       }
     }, 1000);
 
