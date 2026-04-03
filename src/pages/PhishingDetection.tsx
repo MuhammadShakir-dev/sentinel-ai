@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Globe, Search, ShieldAlert, ShieldCheck, Lock, Clock, ExternalLink, AlertTriangle } from "lucide-react";
+import { Globe, Search, ShieldAlert, ShieldCheck, Lock, ExternalLink, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface ScanResult {
   risk: "Safe" | "Suspicious" | "Dangerous";
@@ -11,37 +13,12 @@ interface ScanResult {
   summary: string;
 }
 
-const simulateScan = (url: string): ScanResult => {
-  const suspicious = url.includes("free") || url.includes("login") || url.includes("verify") || url.includes("secure") || !url.includes(".");
-  const dangerous = url.includes("phish") || url.includes("hack") || url.includes("malware") || url.includes("fake");
-
-  const risk = dangerous ? "Dangerous" : suspicious ? "Suspicious" : "Safe";
-  const score = dangerous ? 15 + Math.random() * 20 : suspicious ? 40 + Math.random() * 25 : 80 + Math.random() * 18;
-
-  return {
-    risk,
-    score: Math.round(score),
-    checks: [
-      { name: "SSL Certificate", status: dangerous ? "fail" : suspicious ? "warn" : "pass", detail: dangerous ? "Invalid or missing" : suspicious ? "Self-signed certificate" : "Valid SSL (Let's Encrypt)" },
-      { name: "Domain Age", status: dangerous ? "fail" : suspicious ? "warn" : "pass", detail: dangerous ? "Registered 2 days ago" : suspicious ? "Registered 3 months ago" : "Registered 5+ years ago" },
-      { name: "URL Pattern Analysis", status: dangerous ? "fail" : suspicious ? "warn" : "pass", detail: dangerous ? "Known phishing pattern detected" : suspicious ? "Suspicious URL structure" : "Clean URL structure" },
-      { name: "Redirect Chain", status: dangerous ? "fail" : "pass", detail: dangerous ? "3 suspicious redirects" : "No suspicious redirects" },
-      { name: "Content Analysis", status: dangerous ? "fail" : suspicious ? "warn" : "pass", detail: dangerous ? "Login form mimics known brand" : suspicious ? "Contains credential request" : "Normal content structure" },
-      { name: "Blacklist Check", status: dangerous ? "fail" : "pass", detail: dangerous ? "Found in phishing database" : "Not found in any blacklist" },
-    ],
-    summary: dangerous
-      ? "⚠️ HIGH RISK: This URL matches known phishing patterns and is likely a malicious website designed to steal credentials."
-      : suspicious
-      ? "⚡ MODERATE RISK: This URL shows some suspicious characteristics. Exercise caution before providing any personal information."
-      : "✅ LOW RISK: This URL appears to be legitimate with valid security certificates and clean patterns.",
-  };
-};
-
 const PhishingDetection = () => {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<ScanResult | null>(null);
+  const { toast } = useToast();
 
   const handleScan = async () => {
     if (!url.trim()) return;
@@ -49,13 +26,35 @@ const PhishingDetection = () => {
     setResult(null);
     setProgress(0);
 
-    for (let i = 0; i <= 100; i += 4) {
-      await new Promise((r) => setTimeout(r, 60));
-      setProgress(i);
-    }
+    const progressInterval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 90) return prev;
+        return prev + Math.random() * 10;
+      });
+    }, 250);
 
-    setResult(simulateScan(url));
-    setLoading(false);
+    try {
+      const { data, error } = await supabase.functions.invoke("analyze-phishing", {
+        body: { url },
+      });
+
+      clearInterval(progressInterval);
+      setProgress(100);
+
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+
+      setResult(data as ScanResult);
+    } catch (err: any) {
+      toast({
+        title: "Scan Failed",
+        description: err.message || "Could not scan URL. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      clearInterval(progressInterval);
+      setLoading(false);
+    }
   };
 
   const riskColor = result?.risk === "Dangerous" ? "text-destructive" : result?.risk === "Suspicious" ? "text-warning" : "text-accent";
@@ -69,7 +68,7 @@ const PhishingDetection = () => {
         </div>
         <div>
           <h1 className="text-2xl font-mono font-bold text-foreground">Phishing Website Detection</h1>
-          <p className="text-sm text-muted-foreground">Scan URLs to identify phishing threats in real-time</p>
+          <p className="text-sm text-muted-foreground">AI-powered URL scanning for phishing threats</p>
         </div>
       </div>
 
@@ -98,12 +97,12 @@ const PhishingDetection = () => {
         {loading && (
           <div className="mt-4 space-y-2">
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Scanning URL...</span>
-              <span>{progress}%</span>
+              <span>AI Scanning URL...</span>
+              <span>{Math.round(progress)}%</span>
             </div>
             <Progress value={progress} className="h-2" />
             <div className="text-xs text-primary font-mono animate-pulse-glow">
-              {progress < 25 ? "Resolving DNS..." : progress < 50 ? "Checking SSL certificate..." : progress < 75 ? "Analyzing URL patterns..." : "Running blacklist check..."}
+              {progress < 25 ? "Analyzing URL structure..." : progress < 50 ? "Checking domain patterns..." : progress < 75 ? "Running AI threat model..." : "Generating security report..."}
             </div>
           </div>
         )}
@@ -112,7 +111,6 @@ const PhishingDetection = () => {
       {/* Results */}
       {result && (
         <div className="space-y-4 animate-fade-in-up">
-          {/* Risk Score */}
           <div className={`glass rounded-xl p-6 ${riskGlow}`}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -134,7 +132,6 @@ const PhishingDetection = () => {
             <p className="text-sm text-muted-foreground">{result.summary}</p>
           </div>
 
-          {/* Detailed Checks */}
           <div className="glass rounded-xl p-6">
             <h3 className="font-mono font-semibold text-foreground mb-4 flex items-center gap-2">
               <Lock className="h-5 w-5 text-primary" /> Security Checks
