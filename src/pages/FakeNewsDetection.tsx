@@ -3,6 +3,8 @@ import { Newspaper, Search, AlertTriangle, CheckCircle, BarChart3, Clock } from 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface AnalysisResult {
   classification: "Real" | "Fake";
@@ -12,31 +14,13 @@ interface AnalysisResult {
   summary: string;
 }
 
-const simulateAnalysis = (text: string): AnalysisResult => {
-  const isFake = text.toLowerCase().includes("shocking") || text.toLowerCase().includes("you won't believe") || text.toLowerCase().includes("miracle") || text.length < 50;
-  const confidence = isFake ? 72 + Math.random() * 20 : 78 + Math.random() * 18;
-  return {
-    classification: isFake ? "Fake" : "Real",
-    confidence: Math.round(confidence * 10) / 10,
-    indicators: [
-      { label: "Emotional Language", value: isFake ? "High" : "Low", risk: isFake ? "high" : "low" },
-      { label: "Source Credibility", value: isFake ? "Unverified" : "Verified", risk: isFake ? "high" : "low" },
-      { label: "Factual Consistency", value: isFake ? "Inconsistent" : "Consistent", risk: isFake ? "medium" : "low" },
-      { label: "Clickbait Pattern", value: isFake ? "Detected" : "None", risk: isFake ? "high" : "low" },
-    ],
-    sentiment: isFake ? "Sensationalist" : "Neutral",
-    summary: isFake
-      ? "The content exhibits patterns commonly associated with misinformation, including emotional language and unverified claims."
-      : "The content appears to follow journalistic standards with factual language and verifiable information.",
-  };
-};
-
 const FakeNewsDetection = () => {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [history, setHistory] = useState<{ text: string; result: AnalysisResult; time: string }[]>([]);
+  const { toast } = useToast();
 
   const handleAnalyze = async () => {
     if (!text.trim()) return;
@@ -44,15 +28,41 @@ const FakeNewsDetection = () => {
     setResult(null);
     setProgress(0);
 
-    for (let i = 0; i <= 100; i += 5) {
-      await new Promise((r) => setTimeout(r, 80));
-      setProgress(i);
-    }
+    // Animate progress while waiting for AI
+    const progressInterval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 90) return prev;
+        return prev + Math.random() * 8;
+      });
+    }, 300);
 
-    const analysis = simulateAnalysis(text);
-    setResult(analysis);
-    setHistory((prev) => [{ text: text.slice(0, 80) + "...", result: analysis, time: new Date().toLocaleTimeString() }, ...prev.slice(0, 4)]);
-    setLoading(false);
+    try {
+      const { data, error } = await supabase.functions.invoke("analyze-fake-news", {
+        body: { text },
+      });
+
+      clearInterval(progressInterval);
+      setProgress(100);
+
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+
+      const analysis = data as AnalysisResult;
+      setResult(analysis);
+      setHistory((prev) => [
+        { text: text.slice(0, 80) + "...", result: analysis, time: new Date().toLocaleTimeString() },
+        ...prev.slice(0, 4),
+      ]);
+    } catch (err: any) {
+      toast({
+        title: "Analysis Failed",
+        description: err.message || "Could not analyze content. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      clearInterval(progressInterval);
+      setLoading(false);
+    }
   };
 
   return (
@@ -63,7 +73,7 @@ const FakeNewsDetection = () => {
         </div>
         <div>
           <h1 className="text-2xl font-mono font-bold text-foreground">Fake News Detection</h1>
-          <p className="text-sm text-muted-foreground">Analyze news content using NLP-powered AI</p>
+          <p className="text-sm text-muted-foreground">Analyze news content using AI-powered NLP</p>
         </div>
       </div>
 
@@ -93,11 +103,11 @@ const FakeNewsDetection = () => {
           <div className="mt-4 space-y-2">
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>AI Analysis in Progress...</span>
-              <span>{progress}%</span>
+              <span>{Math.round(progress)}%</span>
             </div>
             <Progress value={progress} className="h-2" />
             <div className="text-xs text-primary font-mono animate-pulse-glow">
-              {progress < 30 ? "Tokenizing text..." : progress < 60 ? "Running NLP model..." : progress < 90 ? "Analyzing sentiment patterns..." : "Generating report..."}
+              {progress < 30 ? "Sending to AI model..." : progress < 60 ? "Running NLP analysis..." : progress < 90 ? "Evaluating credibility patterns..." : "Generating report..."}
             </div>
           </div>
         )}
@@ -106,7 +116,6 @@ const FakeNewsDetection = () => {
       {/* Results */}
       {result && (
         <div className="space-y-4 animate-fade-in-up">
-          {/* Main Result */}
           <div className={`glass rounded-xl p-6 ${result.classification === "Fake" ? "glow-red border-destructive/30" : "glow-green border-accent/30"}`}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -130,7 +139,6 @@ const FakeNewsDetection = () => {
             <p className="text-sm text-muted-foreground">{result.summary}</p>
           </div>
 
-          {/* Indicators */}
           <div className="glass rounded-xl p-6">
             <h3 className="font-mono font-semibold text-foreground mb-4 flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-primary" /> Analysis Indicators
