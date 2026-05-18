@@ -1,188 +1,184 @@
-import { useState, useEffect, useRef } from "react";
-import { Activity, Play, Square, AlertTriangle, CheckCircle, Wifi, Server } from "lucide-react";
+import { useState } from "react";
+import { Activity, Search, AlertTriangle, CheckCircle, ShieldCheck, Wand2, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { saveScan } from "@/hooks/useAuth";
 
-interface TrafficPoint {
-  time: string;
-  requests: number;
-  bandwidth: number;
+interface DDoSResult {
+  status: "Normal" | "Warning" | "Under Attack";
+  attack_type: string;
+  confidence: number;
+  summary: string;
+  indicators: { label: string; value: string; severity: "info" | "warning" | "critical" }[];
+  recommendations: string[];
 }
 
-interface Alert {
-  time: string;
-  type: string;
-  severity: "info" | "warning" | "critical";
-  message: string;
-}
+const SAMPLE = `Time window: last 60 seconds
+Requests/sec: 4,820 (baseline 180)
+Unique source IPs: 12,400
+Top endpoint: /login (94% of requests)
+Half-open TCP connections: 8,500
+Avg request size: 240 bytes
+Geographic spread: 86 countries, 60% from 2 ASNs
+SYN packets: 320,000 in 60s
+HTTP 503 rate: 42%`;
 
 const DDoSDetection = () => {
-  const [monitoring, setMonitoring] = useState(false);
-  const [status, setStatus] = useState<"Normal" | "Warning" | "Under Attack">("Normal");
-  const [trafficData, setTrafficData] = useState<TrafficPoint[]>([]);
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [stats, setStats] = useState({ requests: 0, bandwidth: 0, connections: 0 });
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const tickRef = useRef(0);
+  const [text, setText] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [result, setResult] = useState<DDoSResult | null>(null);
+  const { toast } = useToast();
 
-  useEffect(() => {
-    if (!monitoring) {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      return;
+  const handleScan = async () => {
+    if (!text.trim()) return;
+    setLoading(true);
+    setResult(null);
+    setProgress(0);
+    const tick = setInterval(() => setProgress((p) => (p >= 90 ? p : p + Math.random() * 8)), 250);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("analyze-ddos", { body: { traffic: text } });
+      clearInterval(tick);
+      setProgress(100);
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+
+      const r = data as DDoSResult;
+      setResult(r);
+      await saveScan({
+        tool: "ddos",
+        input: text.slice(0, 200),
+        verdict: r.status,
+        status: r.status === "Under Attack" ? "danger" : r.status === "Warning" ? "warning" : "safe",
+        confidence: r.confidence,
+        result: r,
+      });
+    } catch (err: any) {
+      toast({ title: "Scan failed", description: err.message || "Could not analyze traffic.", variant: "destructive" });
+    } finally {
+      clearInterval(tick);
+      setLoading(false);
     }
+  };
 
-    tickRef.current = 0;
-    setTrafficData([]);
-    setAlerts([]);
-    setStatus("Normal");
-
-    intervalRef.current = setInterval(() => {
-      tickRef.current++;
-      const t = tickRef.current;
-      const isAttack = t > 15 && t < 30;
-      const isWarning = t > 12 && t <= 15;
-
-      const baseReq = 150 + Math.random() * 50;
-      const requests = isAttack ? 800 + Math.random() * 400 : isWarning ? 400 + Math.random() * 200 : baseReq;
-      const bandwidth = isAttack ? 450 + Math.random() * 200 : isWarning ? 200 + Math.random() * 100 : 50 + Math.random() * 30;
-      const connections = isAttack ? 5000 + Math.floor(Math.random() * 3000) : isWarning ? 2000 + Math.floor(Math.random() * 1000) : 200 + Math.floor(Math.random() * 100);
-
-      const now = new Date().toLocaleTimeString();
-      setTrafficData((prev) => [...prev.slice(-30), { time: now, requests: Math.round(requests), bandwidth: Math.round(bandwidth) }]);
-      setStats({ requests: Math.round(requests), bandwidth: Math.round(bandwidth), connections });
-
-      if (isAttack) {
-        setStatus("Under Attack");
-        if (t === 16) setAlerts((prev) => [{ time: now, type: "DDoS", severity: "critical" as const, message: "SYN flood attack detected — traffic spike 5x above baseline" }, ...prev].slice(0, 10));
-        if (t === 20) setAlerts((prev) => [{ time: now, type: "DDoS", severity: "critical" as const, message: "HTTP flood pattern identified from 150+ unique IPs" }, ...prev].slice(0, 10));
-        if (t === 25) setAlerts((prev) => [{ time: now, type: "DDoS", severity: "warning" as const, message: "Attack intensity decreasing — mitigation in effect" }, ...prev].slice(0, 10));
-      } else if (isWarning) {
-        setStatus("Warning");
-        if (t === 13) setAlerts((prev) => [{ time: now, type: "Anomaly", severity: "warning" as const, message: "Unusual traffic spike detected — monitoring closely" }, ...prev].slice(0, 10));
-      } else if (t >= 30) {
-        setStatus("Normal");
-        if (t === 30) setAlerts((prev) => [{ time: now, type: "Recovery", severity: "info" as const, message: "Traffic returned to normal levels — attack mitigated" }, ...prev].slice(0, 10));
-      }
-    }, 1000);
-
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [monitoring]);
-
-  const statusColor = status === "Under Attack" ? "text-destructive" : status === "Warning" ? "text-warning" : "text-accent";
-  const statusGlow = status === "Under Attack" ? "glow-red" : status === "Warning" ? "glow-cyan" : "glow-green";
+  const statusColor = result?.status === "Under Attack" ? "text-destructive" : result?.status === "Warning" ? "text-warning" : "text-accent";
+  const statusGlow = result?.status === "Under Attack" ? "glow-red" : result?.status === "Warning" ? "" : "glow-green";
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <div className="p-3 rounded-xl bg-destructive/10 glow-red">
-          <Activity className="h-6 w-6 text-destructive" />
+        <div className="h-12 w-12 rounded-xl bg-primary/10 grid place-items-center">
+          <Activity className="h-6 w-6 text-primary" />
         </div>
         <div>
-          <h1 className="text-2xl font-mono font-bold text-foreground">DDoS Attack Detection</h1>
-          <p className="text-sm text-muted-foreground">Real-time network traffic monitoring using deep learning</p>
+          <h1 className="text-2xl font-display font-bold">DDoS Attack Detection</h1>
+          <p className="text-sm text-muted-foreground">Paste traffic stats or logs — AI analyzes patterns for DDoS indicators</p>
         </div>
       </div>
 
-      {/* Controls + Status */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="glass rounded-xl p-6 flex-1">
-          <Button
-            onClick={() => setMonitoring(!monitoring)}
-            className={monitoring ? "" : "glow-cyan"}
-            variant={monitoring ? "destructive" : "default"}
-          >
-            {monitoring ? <><Square className="h-4 w-4 mr-1" /> Stop Monitoring</> : <><Play className="h-4 w-4 mr-1" /> Start Monitoring</>}
-          </Button>
-          <p className="text-xs text-muted-foreground mt-3">
-            {monitoring ? "Deep learning model is analyzing network traffic in real-time..." : "Click to begin real-time network traffic analysis"}
-          </p>
-        </div>
-
-        <div className={`glass rounded-xl p-6 flex-1 ${statusGlow}`}>
-          <div className="text-xs text-muted-foreground mb-1">Network Status</div>
-          <div className={`text-2xl font-mono font-bold ${statusColor} flex items-center gap-2`}>
-            {status === "Normal" ? <CheckCircle className="h-6 w-6" /> : <AlertTriangle className="h-6 w-6 animate-pulse" />}
-            {status}
+      <Card className="border-border/60 bg-card/60">
+        <CardContent className="p-6 space-y-4">
+          <Textarea
+            placeholder="Paste traffic stats, log lines, or a summary..."
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            className="min-h-[180px] resize-none font-code text-sm"
+          />
+          <div className="flex items-center justify-between">
+            <Button variant="outline" size="sm" onClick={() => setText(SAMPLE)}>
+              <Wand2 className="h-4 w-4 mr-1.5" /> Load sample
+            </Button>
+            <Button onClick={handleScan} disabled={loading || !text.trim()} className="bg-primary text-primary-foreground hover:bg-primary/90">
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <div className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                  Analyzing...
+                </span>
+              ) : (
+                <><Search className="h-4 w-4 mr-1.5" /> Analyze Traffic</>
+              )}
+            </Button>
           </div>
-        </div>
-      </div>
+          {loading && (
+            <div className="space-y-2">
+              <Progress value={progress} className="h-2" />
+              <p className="text-xs text-primary font-medium">
+                {progress < 30 ? "Parsing traffic data..." : progress < 70 ? "Running deep learning analysis..." : "Identifying attack vectors..."}
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-      {/* Stats */}
-      {monitoring && (
-        <div className="grid grid-cols-3 gap-4 animate-fade-in">
-          <div className="glass rounded-xl p-4 text-center">
-            <Server className="h-5 w-5 text-primary mx-auto mb-1" />
-            <div className="text-2xl font-mono font-bold text-foreground">{stats.requests}</div>
-            <div className="text-xs text-muted-foreground">Req/sec</div>
-          </div>
-          <div className="glass rounded-xl p-4 text-center">
-            <Wifi className="h-5 w-5 text-primary mx-auto mb-1" />
-            <div className="text-2xl font-mono font-bold text-foreground">{stats.bandwidth} MB</div>
-            <div className="text-xs text-muted-foreground">Bandwidth</div>
-          </div>
-          <div className="glass rounded-xl p-4 text-center">
-            <Activity className="h-5 w-5 text-primary mx-auto mb-1" />
-            <div className="text-2xl font-mono font-bold text-foreground">{stats.connections.toLocaleString()}</div>
-            <div className="text-xs text-muted-foreground">Connections</div>
-          </div>
-        </div>
-      )}
-
-      {/* Traffic Chart */}
-      {trafficData.length > 2 && (
-        <div className="glass rounded-xl p-6 animate-fade-in">
-          <h3 className="font-mono font-semibold text-foreground mb-4">Network Traffic</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <AreaChart data={trafficData}>
-              <defs>
-                <linearGradient id="reqGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(165, 65%, 50%)" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="hsl(165, 65%, 50%)" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="bwGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(0, 75%, 60%)" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="hsl(0, 75%, 60%)" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(210, 30%, 15%)" />
-              <XAxis dataKey="time" tick={{ fill: "hsl(215, 15%, 60%)", fontSize: 10 }} />
-              <YAxis tick={{ fill: "hsl(215, 15%, 60%)", fontSize: 10 }} />
-              <Tooltip contentStyle={{ background: "hsl(210, 45%, 9%)", border: "1px solid hsl(210, 30%, 15%)", borderRadius: "8px", color: "hsl(160, 25%, 92%)" }} />
-              <Area type="monotone" dataKey="requests" stroke="hsl(165, 65%, 50%)" fill="url(#reqGrad)" name="Requests/s" />
-              <Area type="monotone" dataKey="bandwidth" stroke="hsl(0, 75%, 60%)" fill="url(#bwGrad)" name="Bandwidth (MB)" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-
-      {/* Alerts */}
-      {alerts.length > 0 && (
-        <div className="glass rounded-xl p-6 animate-fade-in">
-          <h3 className="font-mono font-semibold text-foreground mb-4 flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-primary" /> Alerts
-          </h3>
-          <div className="space-y-2">
-            {alerts.map((a, i) => (
-              <div key={i} className={`flex items-start gap-3 p-3 rounded-lg ${
-                a.severity === "critical" ? "bg-destructive/5 border border-destructive/20" :
-                a.severity === "warning" ? "bg-warning/5 border border-warning/20" :
-                "bg-accent/5 border border-accent/20"
-              }`}>
-                <div className={`h-2 w-2 rounded-full mt-1.5 ${
-                  a.severity === "critical" ? "bg-destructive animate-pulse" : a.severity === "warning" ? "bg-warning" : "bg-accent"
-                }`} />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className={`text-xs font-mono uppercase ${
-                      a.severity === "critical" ? "text-destructive" : a.severity === "warning" ? "text-warning" : "text-accent"
-                    }`}>{a.severity}</span>
-                    <span className="text-xs text-muted-foreground">{a.time}</span>
+      {result && (
+        <div className="space-y-4">
+          <Card className={`border-border/60 bg-card/60 ${statusGlow}`}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {result.status === "Normal" ? <ShieldCheck className="h-8 w-8 text-accent" /> : <AlertTriangle className={`h-8 w-8 ${statusColor} ${result.status === "Under Attack" ? "animate-pulse" : ""}`} />}
+                  <div>
+                    <h3 className="text-xl font-display font-bold">
+                      Status: <span className={statusColor}>{result.status}</span>
+                    </h3>
+                    <p className="text-sm text-muted-foreground">{result.summary}</p>
+                    {result.attack_type !== "None" && (
+                      <Badge variant="outline" className="mt-2 border-destructive/30 bg-destructive/10 text-destructive">
+                        Attack type: {result.attack_type}
+                      </Badge>
+                    )}
                   </div>
-                  <p className="text-sm text-foreground mt-1">{a.message}</p>
+                </div>
+                <div className="text-right">
+                  <div className={`text-3xl font-display font-bold ${statusColor}`}>{result.confidence}%</div>
+                  <div className="text-xs text-muted-foreground">Confidence</div>
                 </div>
               </div>
-            ))}
-          </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/60 bg-card/60">
+            <CardContent className="p-6">
+              <h3 className="font-display font-semibold mb-4 flex items-center gap-2">
+                <ListChecks className="h-5 w-5 text-primary" /> Traffic Indicators
+              </h3>
+              <div className="grid md:grid-cols-2 gap-3">
+                {result.indicators.map((ind, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                    <span className="text-sm text-muted-foreground">{ind.label}</span>
+                    <span className={`text-sm font-medium ${
+                      ind.severity === "critical" ? "text-destructive" :
+                      ind.severity === "warning" ? "text-warning" : "text-accent"
+                    }`}>{ind.value}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {result.recommendations?.length > 0 && (
+            <Card className="border-border/60 bg-card/60">
+              <CardContent className="p-6">
+                <h3 className="font-display font-semibold mb-4 flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-primary" /> Recommendations
+                </h3>
+                <ul className="space-y-2">
+                  {result.recommendations.map((r, i) => (
+                    <li key={i} className="flex gap-2 text-sm">
+                      <span className="text-primary">→</span>
+                      <span className="text-foreground/90">{r}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
     </div>
