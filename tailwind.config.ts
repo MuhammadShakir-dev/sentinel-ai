@@ -14,8 +14,10 @@ export default {
     },
     extend: {
       fontFamily: {
-        mono: ["JetBrains Mono", "Fira Code", "Courier New", "monospace"],
-        sans: ["Inter", "system-ui", "-apple-system", "sans-serif"],
+        sans: ["Manrope", "system-ui", "-apple-system", "sans-serif"],
+        display: ["Sora", "system-ui", "sans-serif"],
+        mono: ["Sora", "system-ui", "sans-serif"],
+        code: ["JetBrains Mono", "Fira Code", "monospace"],
       },
       colors: {
         border: "hsl(var(--border))",
