@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Newspaper, Search, AlertTriangle, CheckCircle, BarChart3, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { saveScan } from "@/hooks/useAuth";
 
 interface AnalysisResult {
   classification: "Real" | "Fake";
@@ -21,6 +22,21 @@ const FakeNewsDetection = () => {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [history, setHistory] = useState<{ text: string; result: AnalysisResult; time: string }[]>([]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("scans").select("input, verdict, confidence, result, created_at")
+        .eq("tool", "fake-news").order("created_at", { ascending: false }).limit(5);
+      if (data) {
+        setHistory(data.map((s: any) => ({
+          text: s.input,
+          result: s.result as AnalysisResult,
+          time: new Date(s.created_at).toLocaleTimeString(),
+        })));
+      }
+    })();
+  }, []);
 
   const handleAnalyze = async () => {
     if (!text.trim()) return;
@@ -49,10 +65,19 @@ const FakeNewsDetection = () => {
 
       const analysis = data as AnalysisResult;
       setResult(analysis);
+      const shortInput = text.slice(0, 120);
       setHistory((prev) => [
-        { text: text.slice(0, 80) + "...", result: analysis, time: new Date().toLocaleTimeString() },
+        { text: shortInput, result: analysis, time: new Date().toLocaleTimeString() },
         ...prev.slice(0, 4),
       ]);
+      await saveScan({
+        tool: "fake-news",
+        input: shortInput,
+        verdict: analysis.classification,
+        status: analysis.classification === "Fake" ? "danger" : "safe",
+        confidence: analysis.confidence,
+        result: analysis,
+      });
     } catch (err: any) {
       toast({
         title: "Analysis Failed",

@@ -1,213 +1,210 @@
-import { useState, useEffect, useRef } from "react";
-import { Keyboard, Play, Square, AlertTriangle, CheckCircle, Shield, Clock } from "lucide-react";
+import { useState } from "react";
+import { Keyboard, Search, AlertTriangle, CheckCircle, FileText, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { saveScan } from "@/hooks/useAuth";
 
-interface Process {
-  pid: number;
+interface AnalyzedProcess {
   name: string;
-  behavior: string;
+  pid: string;
   risk: "Safe" | "Suspicious" | "Malicious";
-  cpu: string;
-  memory: string;
+  reason: string;
+}
+interface KeyloggerResult {
+  summary: string;
+  threat_level: "Safe" | "Suspicious" | "Critical";
+  confidence: number;
+  processes: AnalyzedProcess[];
 }
 
-const mockProcesses: Process[] = [
-  { pid: 1024, name: "chrome.exe", behavior: "Normal browsing activity", risk: "Safe", cpu: "2.3%", memory: "450MB" },
-  { pid: 2048, name: "svchost.exe", behavior: "System service", risk: "Safe", cpu: "0.1%", memory: "32MB" },
-  { pid: 3072, name: "keyhelper.dll", behavior: "Keystroke interception detected", risk: "Malicious", cpu: "4.8%", memory: "12MB" },
-  { pid: 4096, name: "explorer.exe", behavior: "Normal shell process", risk: "Safe", cpu: "1.2%", memory: "120MB" },
-  { pid: 5120, name: "inputmon.exe", behavior: "Monitoring keyboard input API", risk: "Suspicious", cpu: "3.1%", memory: "28MB" },
-  { pid: 6144, name: "notepad.exe", behavior: "Normal text editing", risk: "Safe", cpu: "0.3%", memory: "15MB" },
-  { pid: 7168, name: "klogd_service.exe", behavior: "Hidden keystroke logger active", risk: "Malicious", cpu: "5.2%", memory: "8MB" },
-  { pid: 8192, name: "update_helper.exe", behavior: "Unusual network activity", risk: "Suspicious", cpu: "2.7%", memory: "45MB" },
-];
+const SAMPLE = `chrome.exe [1024] 2.3% 450MB - browser
+svchost.exe [2048] 0.1% 32MB - system service
+keyhelper.dll [3072] 4.8% 12MB - injected into explorer.exe
+explorer.exe [4096] 1.2% 120MB - shell
+inputmon.exe [5120] 3.1% 28MB - low-level keyboard hook registered
+notepad.exe [6144] 0.3% 15MB - text editor
+klogd_service.exe [7168] 5.2% 8MB - hidden, captures keystrokes
+update_helper.exe [8192] 2.7% 45MB - unusual outbound network`;
 
 const KeyloggerDetection = () => {
-  const [scanning, setScanning] = useState(false);
-  const [scanComplete, setScanComplete] = useState(false);
+  const [text, setText] = useState("");
+  const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [processes, setProcesses] = useState<Process[]>([]);
-  const [monitoring, setMonitoring] = useState(false);
-  const [activityLog, setActivityLog] = useState<string[]>([]);
-  const logRef = useRef<HTMLDivElement>(null);
+  const [result, setResult] = useState<KeyloggerResult | null>(null);
+  const { toast } = useToast();
 
-  const startScan = async () => {
-    setScanning(true);
-    setScanComplete(false);
-    setProcesses([]);
+  const handleScan = async () => {
+    if (!text.trim()) return;
+    setLoading(true);
+    setResult(null);
     setProgress(0);
 
-    for (let i = 0; i <= 100; i += 2) {
-      await new Promise((r) => setTimeout(r, 60));
-      setProgress(i);
-      if (i % 20 === 0 && i > 0) {
-        const idx = Math.floor((i / 100) * mockProcesses.length);
-        setProcesses((prev) => [...prev, ...mockProcesses.slice(prev.length, idx + 1)]);
-      }
+    const tick = setInterval(() => setProgress((p) => (p >= 90 ? p : p + Math.random() * 8)), 250);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("analyze-keylogger", { body: { processes: text } });
+      clearInterval(tick);
+      setProgress(100);
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+
+      const r = data as KeyloggerResult;
+      setResult(r);
+      await saveScan({
+        tool: "keylogger",
+        input: text.slice(0, 200),
+        verdict: r.threat_level,
+        status: r.threat_level === "Critical" ? "danger" : r.threat_level === "Suspicious" ? "warning" : "safe",
+        confidence: r.confidence,
+        result: r,
+      });
+    } catch (err: any) {
+      toast({ title: "Scan failed", description: err.message || "Could not analyze processes.", variant: "destructive" });
+    } finally {
+      clearInterval(tick);
+      setLoading(false);
     }
-    setProcesses(mockProcesses);
-    setScanning(false);
-    setScanComplete(true);
   };
 
-  useEffect(() => {
-    if (!monitoring) return;
-    const logs = [
-      "[INFO] Monitoring keyboard hooks...",
-      "[OK] No suspicious API calls detected",
-      "[WARN] Process klogd_service.exe accessing keyboard buffer",
-      "[INFO] Checking clipboard access patterns...",
-      "[OK] System drivers verified",
-      "[WARN] inputmon.exe registered low-level keyboard hook",
-      "[INFO] Scanning registry for persistence mechanisms...",
-      "[ALERT] keyhelper.dll injected into explorer.exe address space",
-      "[INFO] Network traffic from suspicious processes: 2.4KB/s",
-      "[OK] No data exfiltration detected in last 30s",
-    ];
-    let i = 0;
-    const interval = setInterval(() => {
-      setActivityLog((prev) => [...prev, `${new Date().toLocaleTimeString()} ${logs[i % logs.length]}`].slice(-20));
-      i++;
-    }, 2000);
-    return () => clearInterval(interval);
-  }, [monitoring]);
-
-  useEffect(() => {
-    if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
-  }, [activityLog]);
-
-  const malicious = processes.filter((p) => p.risk === "Malicious").length;
-  const suspicious = processes.filter((p) => p.risk === "Suspicious").length;
+  const counts = result ? {
+    malicious: result.processes.filter((p) => p.risk === "Malicious").length,
+    suspicious: result.processes.filter((p) => p.risk === "Suspicious").length,
+    safe: result.processes.filter((p) => p.risk === "Safe").length,
+  } : null;
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <div className="p-3 rounded-xl bg-cyber-purple/10">
-          <Keyboard className="h-6 w-6 text-cyber-purple" />
+        <div className="h-12 w-12 rounded-xl bg-primary/10 grid place-items-center">
+          <Keyboard className="h-6 w-6 text-primary" />
         </div>
         <div>
-          <h1 className="text-2xl font-mono font-bold text-foreground">Keylogger Detection</h1>
-          <p className="text-sm text-muted-foreground">Detect hidden keyloggers and malicious background processes</p>
+          <h1 className="text-2xl font-display font-bold">Keylogger Detection</h1>
+          <p className="text-sm text-muted-foreground">Paste a process list — AI will analyze each for keylogger behavior</p>
         </div>
       </div>
 
-      {/* Controls */}
-      <div className="glass rounded-xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-        <Button onClick={startScan} disabled={scanning} className="glow-cyan">
-          {scanning ? (
-            <span className="flex items-center gap-2">
-              <div className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-              Scanning System...
-            </span>
-          ) : (
-            <><Shield className="h-4 w-4 mr-1" /> {scanComplete ? "Re-scan System" : "Start System Scan"}</>
-          )}
-        </Button>
-        <Button
-          variant={monitoring ? "destructive" : "outline"}
-          onClick={() => { setMonitoring(!monitoring); if (!monitoring) setActivityLog([]); }}
-          className={!monitoring ? "border-primary/30 hover:bg-primary/10" : ""}
-        >
-          {monitoring ? <><Square className="h-4 w-4 mr-1" /> Stop Monitoring</> : <><Play className="h-4 w-4 mr-1" /> Start Live Monitoring</>}
-        </Button>
-      </div>
-
-      {/* Scan Progress */}
-      {scanning && (
-        <div className="glass rounded-xl p-6">
-          <div className="flex justify-between text-xs text-muted-foreground mb-2">
-            <span>Scanning system processes...</span>
-            <span>{progress}%</span>
+      <Card className="border-border/60 bg-card/60">
+        <CardContent className="p-6 space-y-4">
+          <Textarea
+            placeholder="Paste running processes (one per line). Example: chrome.exe [1024] 2.3% 450MB"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            className="min-h-[180px] resize-none font-code text-sm"
+          />
+          <div className="flex items-center justify-between">
+            <Button variant="outline" size="sm" onClick={() => setText(SAMPLE)}>
+              <Wand2 className="h-4 w-4 mr-1.5" /> Load sample
+            </Button>
+            <Button onClick={handleScan} disabled={loading || !text.trim()} className="bg-primary text-primary-foreground hover:bg-primary/90">
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <div className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                  Analyzing...
+                </span>
+              ) : (
+                <><Search className="h-4 w-4 mr-1.5" /> Analyze</>
+              )}
+            </Button>
           </div>
-          <Progress value={progress} className="h-2 mb-2" />
-          <p className="text-xs text-primary font-mono animate-pulse-glow">
-            {progress < 30 ? "Enumerating running processes..." : progress < 60 ? "Analyzing API hooks and keyboard interceptors..." : progress < 90 ? "Checking for hidden processes..." : "Generating threat report..."}
-          </p>
-        </div>
-      )}
-
-      {/* Scan Results */}
-      {scanComplete && (
-        <div className="space-y-4 animate-fade-in-up">
-          <div className="grid grid-cols-3 gap-4">
-            <div className="glass rounded-xl p-4 text-center">
-              <CheckCircle className="h-5 w-5 text-accent mx-auto mb-1" />
-              <div className="text-2xl font-mono font-bold text-foreground">{processes.length - malicious - suspicious}</div>
-              <div className="text-xs text-muted-foreground">Safe</div>
-            </div>
-            <div className="glass rounded-xl p-4 text-center">
-              <AlertTriangle className="h-5 w-5 text-warning mx-auto mb-1" />
-              <div className="text-2xl font-mono font-bold text-warning">{suspicious}</div>
-              <div className="text-xs text-muted-foreground">Suspicious</div>
-            </div>
-            <div className="glass rounded-xl p-4 text-center glow-red">
-              <AlertTriangle className="h-5 w-5 text-destructive mx-auto mb-1" />
-              <div className="text-2xl font-mono font-bold text-destructive">{malicious}</div>
-              <div className="text-xs text-muted-foreground">Malicious</div>
-            </div>
-          </div>
-
-          <div className="glass rounded-xl p-6">
-            <h3 className="font-mono font-semibold text-foreground mb-4">Detected Processes</h3>
+          {loading && (
             <div className="space-y-2">
-              {processes.map((p) => (
-                <div key={p.pid} className={`flex items-center gap-4 p-3 rounded-lg ${
-                  p.risk === "Malicious" ? "bg-destructive/5 border border-destructive/20" :
-                  p.risk === "Suspicious" ? "bg-warning/5 border border-warning/20" :
-                  "bg-muted/20"
-                }`}>
-                  <div className={`h-2 w-2 rounded-full ${
-                    p.risk === "Malicious" ? "bg-destructive animate-pulse" : p.risk === "Suspicious" ? "bg-warning" : "bg-accent"
-                  }`} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-mono font-medium text-foreground">{p.name}</span>
-                      <span className="text-xs text-muted-foreground">PID: {p.pid}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground truncate">{p.behavior}</p>
-                  </div>
-                  <div className="text-right text-xs text-muted-foreground hidden sm:block">
-                    <div>CPU: {p.cpu}</div>
-                    <div>RAM: {p.memory}</div>
-                  </div>
-                  <span className={`text-xs font-mono px-2 py-1 rounded-full ${
-                    p.risk === "Malicious" ? "bg-destructive/10 text-destructive" :
-                    p.risk === "Suspicious" ? "bg-warning/10 text-warning" :
-                    "bg-accent/10 text-accent"
-                  }`}>
-                    {p.risk}
-                  </span>
-                </div>
-              ))}
+              <Progress value={progress} className="h-2" />
+              <p className="text-xs text-primary font-medium">
+                {progress < 30 ? "Reading process list..." : progress < 70 ? "Running AI behavioral analysis..." : "Generating threat report..."}
+              </p>
             </div>
-          </div>
-        </div>
-      )}
+          )}
+        </CardContent>
+      </Card>
 
-      {/* Live Monitoring Log */}
-      {monitoring && (
-        <div className="glass rounded-xl p-6 animate-fade-in">
-          <h3 className="font-mono font-semibold text-foreground mb-4 flex items-center gap-2">
-            <Clock className="h-5 w-5 text-primary animate-pulse" /> Live Activity Monitor
-          </h3>
-          <div ref={logRef} className="bg-background/80 rounded-lg p-4 h-60 overflow-y-auto font-mono text-xs space-y-1">
-            {activityLog.length === 0 ? (
-              <p className="text-muted-foreground">Initializing monitor...</p>
-            ) : (
-              activityLog.map((log, i) => (
-                <div key={i} className={
-                  log.includes("[ALERT]") ? "text-destructive" :
-                  log.includes("[WARN]") ? "text-warning" :
-                  log.includes("[OK]") ? "text-accent" :
-                  "text-muted-foreground"
-                }>
-                  {log}
+      {result && (
+        <div className="space-y-4">
+          <Card className={`border-border/60 bg-card/60 ${
+            result.threat_level === "Critical" ? "glow-red" : result.threat_level === "Suspicious" ? "" : "glow-green"
+          }`}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  {result.threat_level === "Critical" ? <AlertTriangle className="h-7 w-7 text-destructive" /> :
+                   result.threat_level === "Suspicious" ? <AlertTriangle className="h-7 w-7 text-warning" /> :
+                   <CheckCircle className="h-7 w-7 text-accent" />}
+                  <div>
+                    <h3 className="text-xl font-display font-bold">
+                      Threat: <span className={
+                        result.threat_level === "Critical" ? "text-destructive" :
+                        result.threat_level === "Suspicious" ? "text-warning" : "text-accent"
+                      }>{result.threat_level}</span>
+                    </h3>
+                    <p className="text-sm text-muted-foreground">{result.summary}</p>
+                  </div>
                 </div>
-              ))
-            )}
-            {monitoring && <div className="text-primary animate-pulse-glow">▌</div>}
-          </div>
+                <div className="text-right">
+                  <div className="text-3xl font-display font-bold">{result.confidence}%</div>
+                  <div className="text-xs text-muted-foreground">Confidence</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {counts && (
+            <div className="grid grid-cols-3 gap-3">
+              <Card className="border-border/60 bg-card/60"><CardContent className="p-4 text-center">
+                <CheckCircle className="h-5 w-5 text-accent mx-auto mb-1" />
+                <div className="text-2xl font-display font-bold">{counts.safe}</div>
+                <div className="text-xs text-muted-foreground">Safe</div>
+              </CardContent></Card>
+              <Card className="border-border/60 bg-card/60"><CardContent className="p-4 text-center">
+                <AlertTriangle className="h-5 w-5 text-warning mx-auto mb-1" />
+                <div className="text-2xl font-display font-bold text-warning">{counts.suspicious}</div>
+                <div className="text-xs text-muted-foreground">Suspicious</div>
+              </CardContent></Card>
+              <Card className="border-border/60 bg-card/60"><CardContent className="p-4 text-center">
+                <AlertTriangle className="h-5 w-5 text-destructive mx-auto mb-1" />
+                <div className="text-2xl font-display font-bold text-destructive">{counts.malicious}</div>
+                <div className="text-xs text-muted-foreground">Malicious</div>
+              </CardContent></Card>
+            </div>
+          )}
+
+          <Card className="border-border/60 bg-card/60">
+            <CardContent className="p-6">
+              <h3 className="font-display font-semibold mb-4 flex items-center gap-2">
+                <FileText className="h-5 w-5 text-primary" /> Detected Processes
+              </h3>
+              <div className="space-y-2">
+                {result.processes.map((p, i) => (
+                  <div key={i} className={`flex items-start gap-3 p-3 rounded-lg ${
+                    p.risk === "Malicious" ? "bg-destructive/5 border border-destructive/20" :
+                    p.risk === "Suspicious" ? "bg-warning/5 border border-warning/20" :
+                    "bg-muted/30"
+                  }`}>
+                    <div className={`h-2 w-2 rounded-full mt-2 ${
+                      p.risk === "Malicious" ? "bg-destructive animate-pulse" :
+                      p.risk === "Suspicious" ? "bg-warning" : "bg-accent"
+                    }`} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-code font-medium">{p.name}</span>
+                        <span className="text-xs text-muted-foreground">PID: {p.pid}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">{p.reason}</p>
+                    </div>
+                    <Badge variant="outline" className={
+                      p.risk === "Malicious" ? "border-destructive/30 bg-destructive/10 text-destructive" :
+                      p.risk === "Suspicious" ? "border-warning/30 bg-warning/10 text-warning" :
+                      "border-accent/30 bg-accent/10 text-accent"
+                    }>{p.risk}</Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>

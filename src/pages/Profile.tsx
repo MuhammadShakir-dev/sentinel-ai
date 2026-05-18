@@ -1,107 +1,124 @@
 import { useState, useEffect } from "react";
-import { User, Mail, Shield, Save, CheckCircle } from "lucide-react";
+import { useOutletContext } from "react-router-dom";
+import { User, Mail, Shield, Save, CheckCircle, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import type { User as AuthUser } from "@supabase/supabase-js";
+import type { Profile as ProfileType } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
+  const { user, profile } = useOutletContext<{ user: AuthUser; profile: ProfileType | null }>();
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const stored = localStorage.getItem("cybershield_user");
-    if (stored) {
-      const user = JSON.parse(stored);
-      setName(user.name);
-      setEmail(user.email);
-    }
-  }, []);
+    if (profile) setName(profile.name);
+  }, [profile]);
 
   const handleSave = async () => {
+    if (!user) return;
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 1000));
-    localStorage.setItem("cybershield_user", JSON.stringify({ name, email }));
-    toast({ title: "Profile updated", description: "Your changes have been saved." });
+    const { error } = await supabase
+      .from("profiles")
+      .update({ name })
+      .eq("user_id", user.id);
     setSaving(false);
+    if (error) {
+      toast({ title: "Save failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Profile updated", description: "Your changes have been saved." });
   };
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/");
+  };
+
+  const initial = (name || user?.email || "U")[0].toUpperCase();
+
   return (
-    <div className="max-w-2xl space-y-6 animate-fade-in">
-      <div className="flex items-center gap-3">
-        <div className="p-3 rounded-xl bg-primary/10 glow-cyan">
-          <User className="h-6 w-6 text-primary" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-mono font-bold text-foreground">Profile Settings</h1>
-          <p className="text-sm text-muted-foreground">Manage your account information</p>
-        </div>
+    <div className="max-w-2xl space-y-6">
+      <div>
+        <h1 className="text-3xl font-display font-bold tracking-tight">Profile</h1>
+        <p className="text-muted-foreground mt-1">Manage your account information</p>
       </div>
 
-      <div className="glass rounded-xl p-6 space-y-6">
-        {/* Avatar */}
-        <div className="flex items-center gap-4">
-          <div className="h-16 w-16 rounded-full bg-primary/20 flex items-center justify-center glow-cyan">
-            <span className="text-2xl font-bold text-primary">{name[0]?.toUpperCase() || "U"}</span>
+      <Card className="border-border/60 bg-card/60">
+        <CardHeader>
+          <div className="flex items-center gap-4">
+            <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-primary to-accent grid place-items-center text-2xl font-display font-bold text-primary-foreground">
+              {initial}
+            </div>
+            <div>
+              <CardTitle className="font-display">{name || "Unnamed"}</CardTitle>
+              <CardDescription>{user?.email}</CardDescription>
+            </div>
           </div>
-          <div>
-            <p className="font-mono font-semibold text-foreground">{name || "User"}</p>
-            <p className="text-sm text-muted-foreground">{email}</p>
-          </div>
-        </div>
-
-        <div className="space-y-4">
+        </CardHeader>
+        <CardContent className="space-y-5">
           <div className="space-y-2">
-            <Label className="text-foreground">Full Name</Label>
+            <Label>Full Name</Label>
             <div className="relative">
-              <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input value={name} onChange={(e) => setName(e.target.value)} className="pl-10 bg-muted/30 border-border/50" />
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input value={name} onChange={(e) => setName(e.target.value)} className="pl-10" />
             </div>
           </div>
           <div className="space-y-2">
-            <Label className="text-foreground">Email Address</Label>
+            <Label>Email</Label>
             <div className="relative">
-              <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10 bg-muted/30 border-border/50" />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input value={user?.email ?? ""} disabled className="pl-10" />
             </div>
+            <p className="text-xs text-muted-foreground">Email is managed through your authentication provider.</p>
           </div>
-        </div>
+          <div className="flex gap-2 pt-2">
+            <Button onClick={handleSave} disabled={saving || !name} className="bg-primary text-primary-foreground hover:bg-primary/90">
+              {saving ? (
+                <span className="flex items-center gap-2">
+                  <div className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                  Saving...
+                </span>
+              ) : (
+                <><Save className="h-4 w-4 mr-1.5" /> Save Changes</>
+              )}
+            </Button>
+            <Button variant="outline" onClick={handleSignOut}>
+              <LogOut className="h-4 w-4 mr-1.5" /> Sign Out
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-        <Button onClick={handleSave} disabled={saving} className="glow-cyan">
-          {saving ? (
-            <span className="flex items-center gap-2">
-              <div className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-              Saving...
-            </span>
-          ) : (
-            <><Save className="h-4 w-4 mr-1" /> Save Changes</>
-          )}
-        </Button>
-      </div>
-
-      {/* Security Info */}
-      <div className="glass rounded-xl p-6">
-        <h3 className="font-mono font-semibold text-foreground mb-4 flex items-center gap-2">
-          <Shield className="h-5 w-5 text-primary" /> Security Status
-        </h3>
-        <div className="space-y-3">
+      <Card className="border-border/60 bg-card/60">
+        <CardHeader>
+          <CardTitle className="font-display flex items-center gap-2">
+            <Shield className="h-5 w-5 text-primary" /> Security Status
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
           {[
             { label: "Account Status", value: "Active", ok: true },
-            { label: "Two-Factor Auth", value: "Not Enabled", ok: false },
-            { label: "Last Login", value: new Date().toLocaleDateString(), ok: true },
+            { label: "Email Verified", value: user?.email_confirmed_at ? "Yes" : "No", ok: !!user?.email_confirmed_at },
+            { label: "Created", value: user?.created_at ? new Date(user.created_at).toLocaleDateString() : "—", ok: true },
             { label: "Session", value: "Current", ok: true },
           ].map((item) => (
-            <div key={item.label} className="flex items-center justify-between p-3 rounded-lg bg-muted/20">
+            <div key={item.label} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
               <span className="text-sm text-muted-foreground">{item.label}</span>
-              <span className={`text-sm font-mono flex items-center gap-1 ${item.ok ? "text-accent" : "text-warning"}`}>
-                <CheckCircle className="h-3 w-3" /> {item.value}
+              <span className={`text-sm font-medium flex items-center gap-1.5 ${item.ok ? "text-accent" : "text-warning"}`}>
+                <CheckCircle className="h-3.5 w-3.5" /> {item.value}
               </span>
             </div>
           ))}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

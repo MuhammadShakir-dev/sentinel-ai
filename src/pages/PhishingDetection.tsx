@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { saveScan } from "@/hooks/useAuth";
 
 interface ScanResult {
   risk: "Safe" | "Suspicious" | "Dangerous";
@@ -44,7 +45,16 @@ const PhishingDetection = () => {
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
 
-      setResult(data as ScanResult);
+      const r = data as ScanResult;
+      setResult(r);
+      await saveScan({
+        tool: "phishing",
+        input: url,
+        verdict: r.risk,
+        status: r.risk === "Dangerous" ? "danger" : r.risk === "Suspicious" ? "warning" : "safe",
+        confidence: r.score,
+        result: r,
+      });
     } catch (err: any) {
       toast({
         title: "Scan Failed",

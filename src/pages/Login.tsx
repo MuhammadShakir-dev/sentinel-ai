@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -18,16 +19,16 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1200));
 
-    if (email && password) {
-      localStorage.setItem("cybershield_user", JSON.stringify({ email, name: email.split("@")[0] }));
-      toast({ title: "Welcome back", description: "Signed in to CyberShield AI" });
-      navigate("/dashboard");
-    } else {
-      toast({ title: "Login failed", description: "Please enter valid credentials", variant: "destructive" });
-    }
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
+
+    if (error) {
+      toast({ title: "Sign-in failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Welcome back", description: "Signed in to CyberShield AI" });
+    navigate("/dashboard");
   };
 
   return (
