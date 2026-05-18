@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { Shield, LayoutDashboard, Newspaper, Globe, Keyboard, Activity, User, LogOut, Menu, X } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const navItems = [
   { title: "Overview", url: "/dashboard", icon: LayoutDashboard },
@@ -17,22 +19,28 @@ const navItems = [
 const DashboardLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+  const { user, profile, loading } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem("cybershield_user");
-    if (stored) setUser(JSON.parse(stored));
-    else navigate("/login");
-  }, [navigate]);
+    if (!loading && !user) navigate("/login");
+  }, [loading, user, navigate]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("cybershield_user");
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     navigate("/");
   };
 
-  if (!user) return null;
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen bg-background grid place-items-center">
+        <div className="h-8 w-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
 
+  const displayName = profile?.name || user.email?.split("@")[0] || "User";
+  const displayEmail = profile?.email || user.email || "";
   const currentTitle = navItems.find((n) => n.url === location.pathname)?.title || "Dashboard";
 
   return (
@@ -41,7 +49,6 @@ const DashboardLayout = () => {
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Sidebar */}
       <aside className={`fixed lg:sticky top-0 left-0 z-50 h-screen w-64 bg-sidebar border-r border-sidebar-border flex flex-col transition-transform duration-300 ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
         <div className="p-5 border-b border-sidebar-border flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -85,12 +92,12 @@ const DashboardLayout = () => {
           <div className="flex items-center gap-3 p-2 rounded-md">
             <Avatar className="h-8 w-8">
               <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground text-xs font-semibold">
-                {user.name[0]?.toUpperCase()}
+                {displayName[0]?.toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
-              <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+              <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
+              <p className="text-xs text-muted-foreground truncate">{displayEmail}</p>
             </div>
           </div>
           <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground hover:text-destructive mt-1" onClick={handleLogout}>
@@ -99,7 +106,6 @@ const DashboardLayout = () => {
         </div>
       </aside>
 
-      {/* Main */}
       <div className="flex-1 flex flex-col min-h-screen min-w-0">
         <header className="sticky top-0 z-30 h-14 border-b border-border/60 bg-background/70 backdrop-blur-xl flex items-center px-4 lg:px-8">
           <button onClick={() => setSidebarOpen(true)} className="lg:hidden mr-3 text-muted-foreground hover:text-foreground">
@@ -108,7 +114,7 @@ const DashboardLayout = () => {
           <h2 className="font-display font-semibold text-foreground">{currentTitle}</h2>
         </header>
         <main className="flex-1 p-4 lg:p-8 max-w-7xl w-full mx-auto">
-          <Outlet context={{ user }} />
+          <Outlet context={{ user, profile, displayName }} />
         </main>
       </div>
     </div>

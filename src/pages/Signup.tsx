@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -18,17 +19,28 @@ const Signup = () => {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    await new Promise((r) => setTimeout(r, 1200));
-
-    if (name && email && password.length >= 6) {
-      localStorage.setItem("cybershield_user", JSON.stringify({ email, name }));
-      toast({ title: "Account created", description: "Welcome to CyberShield AI" });
-      navigate("/dashboard");
-    } else {
-      toast({ title: "Signup failed", description: "Fill all fields (password min 6 chars)", variant: "destructive" });
+    if (password.length < 6) {
+      toast({ title: "Weak password", description: "Use at least 6 characters.", variant: "destructive" });
+      return;
     }
+    setLoading(true);
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/dashboard`,
+        data: { name },
+      },
+    });
     setLoading(false);
+
+    if (error) {
+      toast({ title: "Signup failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Account created", description: "Welcome to CyberShield AI" });
+    navigate("/dashboard");
   };
 
   return (
