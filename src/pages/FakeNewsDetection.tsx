@@ -65,10 +65,19 @@ const FakeNewsDetection = () => {
 
       const analysis = data as AnalysisResult;
       setResult(analysis);
+      const shortInput = text.slice(0, 120);
       setHistory((prev) => [
-        { text: text.slice(0, 80) + "...", result: analysis, time: new Date().toLocaleTimeString() },
+        { text: shortInput, result: analysis, time: new Date().toLocaleTimeString() },
         ...prev.slice(0, 4),
       ]);
+      await saveScan({
+        tool: "fake-news",
+        input: shortInput,
+        verdict: analysis.classification,
+        status: analysis.classification === "Fake" ? "danger" : "safe",
+        confidence: analysis.confidence,
+        result: analysis,
+      });
     } catch (err: any) {
       toast({
         title: "Analysis Failed",
