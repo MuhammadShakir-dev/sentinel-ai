@@ -136,20 +136,20 @@ const DDoSDetection = () => {
             <AreaChart data={trafficData}>
               <defs>
                 <linearGradient id="reqGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(185, 100%, 50%)" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="hsl(185, 100%, 50%)" stopOpacity={0} />
+                  <stop offset="5%" stopColor="hsl(165, 65%, 50%)" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="hsl(165, 65%, 50%)" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="bwGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(0, 84%, 60%)" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="hsl(0, 84%, 60%)" stopOpacity={0} />
+                  <stop offset="5%" stopColor="hsl(0, 75%, 60%)" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="hsl(0, 75%, 60%)" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(230, 40%, 16%)" />
-              <XAxis dataKey="time" tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 10 }} />
-              <YAxis tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 10 }} />
-              <Tooltip contentStyle={{ background: "hsl(230, 60%, 8%)", border: "1px solid hsl(230, 40%, 16%)", borderRadius: "8px", color: "hsl(210, 40%, 92%)" }} />
-              <Area type="monotone" dataKey="requests" stroke="hsl(185, 100%, 50%)" fill="url(#reqGrad)" name="Requests/s" />
-              <Area type="monotone" dataKey="bandwidth" stroke="hsl(0, 84%, 60%)" fill="url(#bwGrad)" name="Bandwidth (MB)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(210, 30%, 15%)" />
+              <XAxis dataKey="time" tick={{ fill: "hsl(215, 15%, 60%)", fontSize: 10 }} />
+              <YAxis tick={{ fill: "hsl(215, 15%, 60%)", fontSize: 10 }} />
+              <Tooltip contentStyle={{ background: "hsl(210, 45%, 9%)", border: "1px solid hsl(210, 30%, 15%)", borderRadius: "8px", color: "hsl(160, 25%, 92%)" }} />
+              <Area type="monotone" dataKey="requests" stroke="hsl(165, 65%, 50%)" fill="url(#reqGrad)" name="Requests/s" />
+              <Area type="monotone" dataKey="bandwidth" stroke="hsl(0, 75%, 60%)" fill="url(#bwGrad)" name="Bandwidth (MB)" />
             </AreaChart>
           </ResponsiveContainer>
         </div>
