@@ -71,19 +71,20 @@ const PhishingDetection = () => {
   const riskGlow = result?.risk === "Dangerous" ? "glow-red" : result?.risk === "Suspicious" ? "glow-cyan" : "glow-green";
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center gap-3">
-        <div className="p-3 rounded-xl bg-accent/10 glow-green">
-          <Globe className="h-6 w-6 text-accent" />
+    <div className="space-y-8 animate-fade-in">
+      <div className="flex items-start gap-4">
+        <div className="h-12 w-12 rounded-xl bg-secondary grid place-items-center">
+          <Globe className="h-5 w-5 text-foreground/70" />
         </div>
         <div>
-          <h1 className="text-2xl font-mono font-bold text-foreground">Phishing Website Detection</h1>
-          <p className="text-sm text-muted-foreground">AI-powered URL scanning for phishing threats</p>
+          <h1 className="text-3xl tracking-tight font-semibold">
+            Phishing <span className="font-serif italic font-normal">detection.</span>
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">Drop any URL — our AI checks reputation, domain age, SSL and threat signals.</p>
         </div>
       </div>
 
-      {/* URL Input */}
-      <div className="glass rounded-xl p-6">
+      <div className="rounded-2xl bg-card border border-border/60 p-6 shadow-card-soft">
         <div className="flex gap-3">
           <div className="relative flex-1">
             <ExternalLink className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -121,43 +122,43 @@ const PhishingDetection = () => {
       {/* Results */}
       {result && (
         <div className="space-y-4 animate-fade-in-up">
-          <div className={`glass rounded-xl p-6 ${riskGlow}`}>
+          <div className={`rounded-2xl bg-card border p-6 shadow-card-soft ${result.risk === "Dangerous" ? "border-destructive/30" : result.risk === "Suspicious" ? "border-warning/30" : "border-success/30"}`}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                {result.risk === "Dangerous" ? <ShieldAlert className="h-8 w-8 text-destructive" /> :
-                 result.risk === "Suspicious" ? <AlertTriangle className="h-8 w-8 text-warning" /> :
-                 <ShieldCheck className="h-8 w-8 text-accent" />}
+                {result.risk === "Dangerous" ? <ShieldAlert className="h-7 w-7 text-destructive" /> :
+                 result.risk === "Suspicious" ? <AlertTriangle className="h-7 w-7 text-warning" /> :
+                 <ShieldCheck className="h-7 w-7 text-success" />}
                 <div>
-                  <h3 className="text-xl font-mono font-bold text-foreground">
-                    Status: <span className={riskColor}>{result.risk}</span>
+                  <h3 className="text-xl tracking-tight font-semibold">
+                    Status: <span className={result.risk === "Dangerous" ? "text-destructive" : result.risk === "Suspicious" ? "text-warning" : "text-success"}>{result.risk}</span>
                   </h3>
-                  <p className="text-sm text-muted-foreground font-mono">{url}</p>
+                  <p className="text-sm text-muted-foreground font-mono break-all">{url}</p>
                 </div>
               </div>
               <div className="text-right">
-                <div className={`text-3xl font-mono font-bold ${riskColor}`}>{result.score}%</div>
-                <div className="text-xs text-muted-foreground">Safety Score</div>
+                <div className="text-3xl font-semibold tracking-tight">{result.score}%</div>
+                <div className="text-xs text-muted-foreground">Safety score</div>
               </div>
             </div>
             <p className="text-sm text-muted-foreground">{result.summary}</p>
           </div>
 
-          <div className="glass rounded-xl p-6">
-            <h3 className="font-mono font-semibold text-foreground mb-4 flex items-center gap-2">
-              <Lock className="h-5 w-5 text-primary" /> Security Checks
+          <div className="rounded-2xl bg-card border border-border/60 p-6 shadow-card-soft">
+            <h3 className="font-semibold tracking-tight mb-4 flex items-center gap-2">
+              <Lock className="h-4 w-4 text-muted-foreground" /> Security checks
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-2">
               {result.checks.map((check) => (
-                <div key={check.name} className="flex items-center gap-4 p-3 rounded-lg bg-muted/20">
+                <div key={check.name} className="flex items-center gap-4 p-3 rounded-xl bg-secondary">
                   <div className={`h-2 w-2 rounded-full ${
-                    check.status === "pass" ? "bg-accent" : check.status === "warn" ? "bg-warning" : "bg-destructive"
+                    check.status === "pass" ? "bg-success" : check.status === "warn" ? "bg-warning" : "bg-destructive"
                   }`} />
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-foreground">{check.name}</p>
+                    <p className="text-sm font-medium">{check.name}</p>
                     <p className="text-xs text-muted-foreground">{check.detail}</p>
                   </div>
-                  <span className={`text-xs font-mono uppercase ${
-                    check.status === "pass" ? "text-accent" : check.status === "warn" ? "text-warning" : "text-destructive"
+                  <span className={`text-xs uppercase tracking-wider ${
+                    check.status === "pass" ? "text-success" : check.status === "warn" ? "text-warning" : "text-destructive"
                   }`}>
                     {check.status}
                   </span>

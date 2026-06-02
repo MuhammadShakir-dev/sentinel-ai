@@ -91,19 +91,21 @@ const FakeNewsDetection = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center gap-3">
-        <div className="p-3 rounded-xl bg-primary/10 glow-cyan">
-          <Newspaper className="h-6 w-6 text-primary" />
+    <div className="space-y-8 animate-fade-in">
+      <div className="flex items-start gap-4">
+        <div className="h-12 w-12 rounded-xl bg-secondary grid place-items-center">
+          <Newspaper className="h-5 w-5 text-foreground/70" />
         </div>
         <div>
-          <h1 className="text-2xl font-mono font-bold text-foreground">Fake News Detection</h1>
-          <p className="text-sm text-muted-foreground">Analyze news content using AI-powered NLP</p>
+          <h1 className="text-3xl tracking-tight font-semibold">
+            Fake news <span className="font-serif italic font-normal">detection.</span>
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">Paste any article — our AI rates credibility, sentiment and manipulation patterns.</p>
         </div>
       </div>
 
       {/* Input Area */}
-      <div className="glass rounded-xl p-6">
+      <div className="rounded-2xl bg-card border border-border/60 p-6 shadow-card-soft">
         <Textarea
           placeholder="Paste news article text or content to analyze..."
           value={text}
@@ -141,39 +143,39 @@ const FakeNewsDetection = () => {
       {/* Results */}
       {result && (
         <div className="space-y-4 animate-fade-in-up">
-          <div className={`glass rounded-xl p-6 ${result.classification === "Fake" ? "glow-red border-destructive/30" : "glow-green border-accent/30"}`}>
+          <div className={`rounded-2xl border p-6 shadow-card-soft bg-card ${result.classification === "Fake" ? "border-destructive/30" : "border-success/30"}`}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 {result.classification === "Fake" ? (
-                  <AlertTriangle className="h-8 w-8 text-destructive" />
+                  <AlertTriangle className="h-7 w-7 text-destructive" />
                 ) : (
-                  <CheckCircle className="h-8 w-8 text-accent" />
+                  <CheckCircle className="h-7 w-7 text-success" />
                 )}
                 <div>
-                  <h3 className="text-xl font-mono font-bold text-foreground">
-                    Classification: <span className={result.classification === "Fake" ? "text-destructive" : "text-accent"}>{result.classification}</span>
+                  <h3 className="text-xl tracking-tight font-semibold">
+                    Verdict: <span className={result.classification === "Fake" ? "text-destructive" : "text-success"}>{result.classification}</span>
                   </h3>
                   <p className="text-sm text-muted-foreground">Sentiment: {result.sentiment}</p>
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-3xl font-mono font-bold text-foreground">{result.confidence}%</div>
+                <div className="text-3xl font-semibold tracking-tight">{result.confidence}%</div>
                 <div className="text-xs text-muted-foreground">Confidence</div>
               </div>
             </div>
             <p className="text-sm text-muted-foreground">{result.summary}</p>
           </div>
 
-          <div className="glass rounded-xl p-6">
-            <h3 className="font-mono font-semibold text-foreground mb-4 flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-primary" /> Analysis Indicators
+          <div className="rounded-2xl bg-card border border-border/60 p-6 shadow-card-soft">
+            <h3 className="font-semibold tracking-tight mb-4 flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-muted-foreground" /> Analysis indicators
             </h3>
             <div className="grid md:grid-cols-2 gap-3">
               {result.indicators.map((ind) => (
-                <div key={ind.label} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                <div key={ind.label} className="flex items-center justify-between p-3 rounded-xl bg-secondary">
                   <span className="text-sm text-muted-foreground">{ind.label}</span>
-                  <span className={`text-sm font-mono font-medium ${
-                    ind.risk === "high" ? "text-destructive" : ind.risk === "medium" ? "text-warning" : "text-accent"
+                  <span className={`text-sm font-medium ${
+                    ind.risk === "high" ? "text-destructive" : ind.risk === "medium" ? "text-warning" : "text-success"
                   }`}>
                     {ind.value}
                   </span>
@@ -186,16 +188,16 @@ const FakeNewsDetection = () => {
 
       {/* History */}
       {history.length > 0 && (
-        <div className="glass rounded-xl p-6">
-          <h3 className="font-mono font-semibold text-foreground mb-4 flex items-center gap-2">
-            <Clock className="h-5 w-5 text-primary" /> Recent Analyses
+        <div className="rounded-2xl bg-card border border-border/60 p-6 shadow-card-soft">
+          <h3 className="font-semibold tracking-tight mb-4 flex items-center gap-2">
+            <Clock className="h-4 w-4 text-muted-foreground" /> Recent analyses
           </h3>
           <div className="space-y-2">
             {history.map((h, i) => (
-              <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/20">
+              <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-secondary">
                 <span className="text-sm text-muted-foreground truncate max-w-[60%]">{h.text}</span>
                 <div className="flex items-center gap-3">
-                  <span className={`text-xs font-mono ${h.result.classification === "Fake" ? "text-destructive" : "text-accent"}`}>
+                  <span className={`text-xs font-medium ${h.result.classification === "Fake" ? "text-destructive" : "text-success"}`}>
                     {h.result.classification} ({h.result.confidence}%)
                   </span>
                   <span className="text-xs text-muted-foreground">{h.time}</span>
