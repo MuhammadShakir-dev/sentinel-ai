@@ -71,14 +71,16 @@ const DDoSDetection = () => {
   const statusGlow = result?.status === "Under Attack" ? "glow-red" : result?.status === "Warning" ? "" : "glow-green";
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="h-12 w-12 rounded-xl bg-primary/10 grid place-items-center">
-          <Activity className="h-6 w-6 text-primary" />
+    <div className="space-y-8 animate-fade-in">
+      <div className="flex items-start gap-4">
+        <div className="h-12 w-12 rounded-xl bg-secondary grid place-items-center">
+          <Activity className="h-5 w-5 text-foreground/70" />
         </div>
         <div>
-          <h1 className="text-2xl font-display font-bold">DDoS Attack Detection</h1>
-          <p className="text-sm text-muted-foreground">Paste traffic stats or logs — AI analyzes patterns for DDoS indicators</p>
+          <h1 className="text-3xl tracking-tight font-semibold">
+            DDoS <span className="font-serif italic font-normal">analysis.</span>
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">Paste traffic stats or log snippets — our AI surfaces attack patterns and indicators.</p>
         </div>
       </div>
 

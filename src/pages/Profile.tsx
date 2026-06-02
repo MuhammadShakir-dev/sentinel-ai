@@ -45,10 +45,12 @@ const Profile = () => {
   const initial = (name || user?.email || "U")[0].toUpperCase();
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="max-w-2xl space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-3xl font-display font-bold tracking-tight">Profile</h1>
-        <p className="text-muted-foreground mt-1">Manage your account information</p>
+        <h1 className="text-3xl tracking-tight font-semibold">
+          Your <span className="font-serif italic font-normal">profile.</span>
+        </h1>
+        <p className="mt-2 text-muted-foreground">Manage your account information.</p>
       </div>
 
       <Card className="border-border/60 bg-card/60">

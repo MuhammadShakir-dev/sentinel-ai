@@ -78,14 +78,16 @@ const KeyloggerDetection = () => {
   } : null;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="h-12 w-12 rounded-xl bg-primary/10 grid place-items-center">
-          <Keyboard className="h-6 w-6 text-primary" />
+    <div className="space-y-8 animate-fade-in">
+      <div className="flex items-start gap-4">
+        <div className="h-12 w-12 rounded-xl bg-secondary grid place-items-center">
+          <Keyboard className="h-5 w-5 text-foreground/70" />
         </div>
         <div>
-          <h1 className="text-2xl font-display font-bold">Keylogger Detection</h1>
-          <p className="text-sm text-muted-foreground">Paste a process list — AI will analyze each for keylogger behavior</p>
+          <h1 className="text-3xl tracking-tight font-semibold">
+            Keylogger <span className="font-serif italic font-normal">forensics.</span>
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">Paste a process list — our AI flags hidden keystroke loggers and unusual hooks.</p>
         </div>
       </div>
 
