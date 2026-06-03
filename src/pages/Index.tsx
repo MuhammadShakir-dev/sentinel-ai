@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import {
-  Shield, Newspaper, Globe, Keyboard, Activity, ArrowRight, ArrowUpRight,
+  Newspaper, Globe, Keyboard, Activity, ArrowRight, ArrowUpRight,
   Check, Plus, Minus, Sparkles, Quote,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { Logo } from "@/components/Logo";
 import heroImg from "@/assets/hero-sculpture.jpg";
 import featureNetwork from "@/assets/feature-network.jpg";
 import featureFlow from "@/assets/feature-flow.jpg";
@@ -73,9 +74,7 @@ const Index = () => {
       <header className="absolute top-0 inset-x-0 z-50">
         <div className="container mx-auto px-6 h-20 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-foreground grid place-items-center">
-              <Shield className="h-4 w-4 text-background" />
-            </div>
+            <Logo size={32} />
             <span className="text-base font-semibold tracking-tight">CyberShield</span>
           </Link>
 
@@ -424,9 +423,7 @@ const Index = () => {
         <div className="container mx-auto px-6 py-14 grid md:grid-cols-[1.4fr_1fr_1fr_1fr] gap-10">
           <div>
             <Link to="/" className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-foreground grid place-items-center">
-                <Shield className="h-4 w-4 text-background" />
-              </div>
+              <Logo size={32} />
               <span className="text-base font-semibold tracking-tight">CyberShield</span>
             </Link>
             <p className="mt-4 text-sm text-muted-foreground max-w-xs">A modern, AI-first cybersecurity workspace — designed for humans.</p>
