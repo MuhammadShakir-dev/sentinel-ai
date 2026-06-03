@@ -209,7 +209,7 @@ const Index = () => {
       {/* ───────── Services / Industries ───────── */}
       <section id="services" className="relative border-t border-border/60">
         <SectionLabel n="03" label="Services" />
-        <div className="container mx-auto px-6 py-24 lg:py-32 grid lg:grid-cols-[1fr_0.9fr] gap-14 items-start">
+        <div className="container mx-auto px-6 py-24 lg:py-32 grid lg:grid-cols-[1fr_0.9fr] gap-14 items-center">
           <div>
             <Eyebrow>Built for your work</Eyebrow>
             <h2 className="mt-5 text-4xl md:text-5xl tracking-tight font-semibold">
