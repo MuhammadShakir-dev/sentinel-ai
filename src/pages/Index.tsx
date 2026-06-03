@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { Logo } from "@/components/Logo";
 import heroImg from "@/assets/hero-sculpture.jpg";
 import featureNetwork from "@/assets/feature-network.jpg";
 import featureFlow from "@/assets/feature-flow.jpg";
