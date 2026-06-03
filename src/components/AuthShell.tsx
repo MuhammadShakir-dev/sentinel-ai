@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { Shield } from "lucide-react";
+import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface Props {
@@ -15,9 +15,7 @@ export default function AuthShell({ title, subtitle, children, footer }: Props) 
     <div className="min-h-screen bg-hero flex flex-col">
       <header className="container mx-auto px-6 h-20 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-foreground grid place-items-center">
-            <Shield className="h-4 w-4 text-background" />
-          </div>
+          <Logo size={32} />
           <span className="text-base font-semibold tracking-tight">CyberShield</span>
         </Link>
         <ThemeToggle />

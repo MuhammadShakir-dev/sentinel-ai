@@ -1,5 +1,6 @@
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
-import { Shield, LayoutDashboard, Newspaper, Globe, Keyboard, Activity, User, LogOut, Menu, X } from "lucide-react";
+import { LayoutDashboard, Newspaper, Globe, Keyboard, Activity, User, LogOut, Menu, X } from "lucide-react";
+import { Logo } from "@/components/Logo";
 import { NavLink } from "@/components/NavLink";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -48,9 +49,7 @@ const DashboardLayout = () => {
       <aside className={`fixed lg:sticky top-0 left-0 z-50 h-screen w-64 bg-sidebar border-r border-sidebar-border flex flex-col transition-transform duration-300 ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
         <div className="px-5 h-20 border-b border-sidebar-border flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-foreground grid place-items-center">
-              <Shield className="h-4 w-4 text-background" />
-            </div>
+            <Logo size={32} />
             <span className="font-semibold tracking-tight">CyberShield</span>
           </div>
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-muted-foreground hover:text-foreground">
