@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import {
   Newspaper, Globe, Keyboard, Activity, ArrowRight, ArrowUpRight,
-  Check, Plus, Minus, Sparkles, Quote,
+  Plus, Minus, Sparkles, Quote,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
