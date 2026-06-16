@@ -109,7 +109,7 @@ const Profile = () => {
           {[
             { label: "Account Status", value: "Active", ok: true },
             { label: "Email Verified", value: user?.email_confirmed_at ? "Yes" : "No", ok: !!user?.email_confirmed_at },
-            { label: "Created", value: user?.created_at ? new Date(user.created_at).toLocaleDateString() : "—", ok: true },
+            { label: "Created", value: user?.created_at ? new Date(user.created_at).toLocaleDateString() : "-", ok: true },
             { label: "Session", value: "Current", ok: true },
           ].map((item) => (
             <div key={item.label} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">

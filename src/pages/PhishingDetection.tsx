@@ -80,7 +80,7 @@ const PhishingDetection = () => {
           <h1 className="text-3xl tracking-tight font-semibold">
             Phishing <span className="font-serif italic font-normal">detection.</span>
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">Drop any URL — our AI checks reputation, domain age, SSL and threat signals.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Drop any URL, our AI checks reputation, domain age, SSL and threat signals.</p>
         </div>
       </div>
 

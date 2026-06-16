@@ -44,7 +44,7 @@ const Dashboard = () => {
   const stats = [
     { label: "Total scans",   value: String(total),   icon: TrendingUp,    hint: total ? `${warnings} warnings` : "Run your first scan" },
     { label: "Threats found", value: String(threats), icon: AlertTriangle, hint: threats ? "Action recommended" : "All clear" },
-    { label: "Safe results",  value: String(safe),    icon: CheckCircle,   hint: total ? `${safeRate}% safe rate` : "—" },
+    { label: "Safe results",  value: String(safe),    icon: CheckCircle,   hint: total ? `${safeRate}% safe rate` : "-" },
     { label: "Active tools",  value: "4 / 4",         icon: ShieldCheck,   hint: "All operational" },
   ];
 

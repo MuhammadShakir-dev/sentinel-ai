@@ -80,7 +80,7 @@ const DDoSDetection = () => {
           <h1 className="text-3xl tracking-tight font-semibold">
             DDoS <span className="font-serif italic font-normal">analysis.</span>
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">Paste traffic stats or log snippets — our AI surfaces attack patterns and indicators.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Paste traffic stats or log snippets, our AI surfaces attack patterns and indicators.</p>
         </div>
       </div>
 

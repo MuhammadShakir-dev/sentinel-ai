@@ -18,7 +18,7 @@ import insight2 from "@/assets/insight-2.jpg";
 const solutions = [
   { kicker: "01", title: "AI-first detection", body: "Behavioral models that learn the rhythm of your network and flag what doesn't belong." },
   { kicker: "02", title: "Calm by design",     body: "A workspace that respects your attention. Every alert is signal, never noise." },
-  { kicker: "03", title: "Built for teams",     body: "One platform for four threat surfaces — share verdicts and history across the team." },
+  { kicker: "03", title: "Built for teams",     body: "One platform for four threat surfaces, share verdicts and history across the team." },
 ];
 
 const services = [
@@ -29,15 +29,15 @@ const services = [
 ];
 
 const insights = [
-  { tag: "Article",  img: insight1, title: "The shape of a modern phishing campaign — and how AI sees it first.",  meta: "8 min read · Research" },
+  { tag: "Article",  img: insight1, title: "The shape of a modern phishing campaign, and how AI sees it first.",  meta: "8 min read · Research" },
   { tag: "Guide",    img: insight2, title: "Reading a process list like a security analyst: a short field guide.", meta: "6 min read · Practice" },
 ];
 
 const faqs = [
   { q: "How is CyberShield different from a traditional SIEM?", a: "We're not trying to replace your SIEM. CyberShield gives non-specialist teams a calm, focused workspace for four specific threats with AI-generated verdicts you can act on in seconds." },
-  { q: "What AI models power the platform?",                    a: "We use leading hosted models from Google and OpenAI through the Lovable AI Gateway — Gemini 3 Flash for fast classification, with GPT-5 fall-backs for ambiguous cases." },
+  { q: "What AI models power the platform?",                    a: "We use leading hosted models from Google and OpenAI through the Lovable AI Gateway, Gemini 3 Flash for fast classification, with GPT-5 fall-backs for ambiguous cases." },
   { q: "Is my data used to train models?",                      a: "No. Inputs are sent for inference only and are stored in your own private workspace. We never train on your content." },
-  { q: "Can I try it before paying?",                           a: "Yes — every account starts on the free Starter plan with no credit card required. Upgrade only when your usage grows." },
+  { q: "Can I try it before paying?",                           a: "Yes, every account starts on the free Starter plan with no credit card required. Upgrade only when your usage grows." },
 ];
 
 const plans = [
@@ -58,7 +58,7 @@ const Eyebrow = ({ children }: { children: React.ReactNode }) => (
 const SectionLabel = ({ n, label }: { n: string; label: string }) => (
   <div className="hidden md:flex absolute right-6 top-6 items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-muted-foreground/70">
     <span>{label}</span>
-    <span>—</span>
+    <span>-</span>
     <span>{n}</span>
   </div>
 );
@@ -109,7 +109,7 @@ const Index = () => {
               Secure with <span className="font-serif italic font-normal text-brand">us</span>.
             </h1>
             <p className="mt-7 text-lg text-muted-foreground max-w-md leading-relaxed">
-              A calm, modern cybersecurity workspace. Four AI-powered tools that detect fake news, phishing, keyloggers and DDoS attacks — before they reach the people you protect.
+              A calm, modern cybersecurity workspace. Four AI-powered tools that detect fake news, phishing, keyloggers and DDoS attacks, before they reach the people you protect.
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-3">
               <Link to="/signup">
@@ -186,7 +186,7 @@ const Index = () => {
 
           <div className="mt-14 grid lg:grid-cols-2 gap-6">
             {[
-              { img: featureNetwork, title: "Accelerate detection and response to cyber threats", body: "Our models cut through noise to surface the few alerts that actually matter — with confidence scores and reasoning attached." },
+              { img: featureNetwork, title: "Accelerate detection and response to cyber threats", body: "Our models cut through noise to surface the few alerts that actually matter, with confidence scores and reasoning attached." },
               { img: featureFlow,    title: "Secure your hybrid, multi-cloud environment",      body: "From inbox links to network edge, CyberShield watches the surfaces that legacy tools quietly miss." },
             ].map((b) => (
               <article key={b.title} className="group rounded-3xl overflow-hidden bg-card border border-border/60 shadow-card-soft">
@@ -400,7 +400,7 @@ const Index = () => {
               Start your journey <br/>
               <span className="font-serif italic font-normal">with CyberShield today.</span>
             </h2>
-            <p className="text-muted-foreground max-w-md">Two ways to begin — both free, both instant.</p>
+            <p className="text-muted-foreground max-w-md">Two ways to begin, both free, both instant.</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-5">
@@ -426,7 +426,7 @@ const Index = () => {
               <Logo size={32} />
               <span className="text-base font-semibold tracking-tight">CyberShield</span>
             </Link>
-            <p className="mt-4 text-sm text-muted-foreground max-w-xs">A modern, AI-first cybersecurity workspace — designed for humans.</p>
+            <p className="mt-4 text-sm text-muted-foreground max-w-xs">A modern, AI-first cybersecurity workspace, designed for humans.</p>
           </div>
 
           {[
@@ -444,7 +444,7 @@ const Index = () => {
         </div>
         <div className="border-t border-border/60">
           <div className="container mx-auto px-6 h-16 flex items-center justify-between text-xs text-muted-foreground">
-            <span>© 2026 CyberShield AI — Final Year Project.</span>
+            <span>© 2026 CyberShield AI, Final Year Project.</span>
             <span>Designed with care.</span>
           </div>
         </div>
