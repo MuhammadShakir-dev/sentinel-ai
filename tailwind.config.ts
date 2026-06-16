@@ -12,8 +12,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["Inter", "system-ui", "-apple-system", "sans-serif"],
-        display: ["Inter", "system-ui", "sans-serif"],
+        sans: ["Satoshi", "system-ui", "-apple-system", "sans-serif"],
+        display: ["Satoshi", "system-ui", "sans-serif"],
         serif: ["Instrument Serif", "Times New Roman", "serif"],
         mono: ["JetBrains Mono", "ui-monospace", "monospace"],
         code: ["JetBrains Mono", "ui-monospace", "monospace"],
