@@ -337,60 +337,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* ───────── Pricing ───────── */}
-      <section id="pricing" className="relative border-t border-border/60">
-        <SectionLabel n="07" label="Pricing" />
-        <div className="container mx-auto px-6 py-24 lg:py-32">
-          <div className="max-w-2xl">
-            <Eyebrow>Simple pricing</Eyebrow>
-            <h2 className="mt-5 text-4xl md:text-5xl tracking-tight font-semibold">
-              Pricing plans <br/>
-              <span className="font-serif italic font-normal">for every business.</span>
-            </h2>
-            <p className="mt-5 text-muted-foreground">Start free. Upgrade when your scans, your team or your retention needs grow.</p>
-          </div>
-
-          <div className="mt-14 grid md:grid-cols-3 gap-5">
-            {plans.map((p) => (
-              <div key={p.name}
-                className={`relative rounded-2xl border p-7 flex flex-col ${
-                  p.featured
-                    ? "bg-foreground text-background border-foreground shadow-glow"
-                    : "bg-card border-border/60 shadow-card-soft"
-                }`}>
-                {p.featured && (
-                  <span className="absolute -top-3 left-7 px-2.5 py-1 text-[10px] uppercase tracking-wider rounded-full bg-primary text-primary-foreground">Most popular</span>
-                )}
-                <div className="text-sm font-medium opacity-80">{p.name}</div>
-                <div className="mt-4 flex items-baseline gap-1">
-                  <span className="text-4xl font-semibold tracking-tight">{p.price}</span>
-                  {p.price !== "Free" && <span className="text-sm opacity-70">/mo</span>}
-                </div>
-                <p className={`mt-2 text-sm ${p.featured ? "opacity-80" : "text-muted-foreground"}`}>{p.desc}</p>
-
-                <ul className="mt-7 space-y-3 text-sm flex-1">
-                  {p.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2.5">
-                      <Check className={`h-4 w-4 mt-0.5 ${p.featured ? "text-primary" : "text-foreground/60"}`} />
-                      <span className={p.featured ? "opacity-90" : "text-foreground/80"}>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <Link to="/signup" className="mt-7">
-                  <Button className={`w-full rounded-full ${
-                    p.featured
-                      ? "bg-background text-foreground hover:bg-background/90"
-                      : "bg-foreground text-background hover:bg-foreground/90"
-                  }`}>
-                    {p.cta}
-                  </Button>
-                </Link>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* ───────── CTA ───────── */}
       <section className="relative border-t border-border/60 bg-soft">
