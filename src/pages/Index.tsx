@@ -40,11 +40,6 @@ const faqs = [
   { q: "Can I try it before paying?",                           a: "Yes, every account starts on the free Starter plan with no credit card required. Upgrade only when your usage grows." },
 ];
 
-const plans = [
-  { name: "Starter",   price: "Free",  desc: "For individuals exploring the platform.", cta: "Get started",      features: ["Up to 50 scans per month", "All 4 detection tools", "7-day history"] },
-  { name: "Team",      price: "$29",   desc: "For small security teams.",                cta: "Start free trial", features: ["Unlimited scans", "Shared workspace", "Priority AI models", "90-day history"], featured: true },
-  { name: "Business",  price: "$99",   desc: "For organisations that need more.",        cta: "Contact sales",    features: ["Everything in Team", "SSO & audit log", "Custom retention", "Dedicated support"] },
-];
 
 /* ────────── small components ────────── */
 
