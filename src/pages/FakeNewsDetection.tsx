@@ -100,7 +100,7 @@ const FakeNewsDetection = () => {
           <h1 className="text-3xl tracking-tight font-semibold">
             Fake news <span className="font-serif italic font-normal">detection.</span>
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">Paste any article — our AI rates credibility, sentiment and manipulation patterns.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Paste any article, our AI rates credibility, sentiment and manipulation patterns.</p>
         </div>
       </div>
 

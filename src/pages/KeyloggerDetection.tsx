@@ -87,7 +87,7 @@ const KeyloggerDetection = () => {
           <h1 className="text-3xl tracking-tight font-semibold">
             Keylogger <span className="font-serif italic font-normal">forensics.</span>
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">Paste a process list — our AI flags hidden keystroke loggers and unusual hooks.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Paste a process list, our AI flags hidden keystroke loggers and unusual hooks.</p>
         </div>
       </div>
 

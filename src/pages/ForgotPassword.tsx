@@ -32,7 +32,7 @@ const ForgotPassword = () => {
   return (
     <AuthShell
       title="Reset your password"
-      subtitle={sent ? "Email sent — follow the link to set a new password." : "Enter your email and we'll send you a reset link."}
+      subtitle={sent ? "Email sent, follow the link to set a new password." : "Enter your email and we'll send you a reset link."}
       footer={<Link to="/login" className="inline-flex items-center gap-1 text-foreground underline underline-offset-4"><ArrowLeft className="h-3 w-3" /> Back to sign in</Link>}
     >
       {!sent ? (
