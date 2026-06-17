@@ -113,7 +113,7 @@ const Index = () => {
                 </Button>
               </Link>
               <Link to="/login">
-                <Button size="lg" variant="ghost" className="rounded-full h-12 px-5 text-foreground/80 hover:bg-background/60">
+                <Button size="lg" variant="ghost" className="rounded-full h-12 px-5 text-foreground/80 hover:bg-background/60 hover:text-foreground">
                   See the dashboard <ArrowUpRight className="ml-1 h-4 w-4" />
                 </Button>
               </Link>
