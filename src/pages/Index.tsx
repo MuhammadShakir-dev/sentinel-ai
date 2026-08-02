@@ -385,7 +385,7 @@ const Index = () => {
         </div>
         <div className="border-t border-border/60">
           <div className="container mx-auto px-6 h-16 flex items-center justify-center text-xs text-muted-foreground">
-            <span>© 2026 CyberShield AI, Final Year Project.</span>
+            <span>© 2026 CyberShield AI.</span>
           </div>
         </div>
       </footer>
